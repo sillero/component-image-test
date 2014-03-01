@@ -1,50 +1,59 @@
-<polymer-element name="ceci-image-test" source="http://www.placekitten.com/150/150" attributes="height source alt description" extends="ceci-element"
-  height="160">
-  <template>
+<polymer-element name="ceci-pagseguro" attributes="amount account currency" extends="ceci-element" currency="BRL" amount="5" account="donate@mozilla.org" button="false">
+<template>
     <link rel="stylesheet" href="component.css"></link>
-    <img id="image" src="" alt=""></img>
-    <div id="description"></div>
+    <img src="doe.jpg" alt="DOE1" title="DOE1"/>    
+    <h2 class="imgdoe" id="account">{{account}}</h2>
+    <h3><span id="donationAmount">Valor da Doação:</span> <span>{{currency}}</span><span>{{amount}}</span></h3>
+    
+    <form id="form" method="post" action="https://www.pagseguro.com/cgi-bin/webscr">
+      <input type="hidden" name="amount" id="pp_amount" value="{{amount}}" />
+      <input type="hidden" name="business" id="pp_business" value="{{account}}" />
+      <input type="hidden" name="currency_code" id="pp_currency_code" value="{{currency}}" />
+      <input type="hidden" name="item_name" id="fundrasingCampaignName" value="Donation from AppMaker App" />
+      <input type="hidden" name="no_shipping" value="1"/>
+      <input type="hidden" name="rm" value="1"/>
+      <input type="hidden" name="cmd" value="_donations" /> <!-- TODO - pode alternar entre doação e pagamentos -->
+      <input type="hidden" name="return" value="https://ws.pagseguro.uol.com.br/v2/checkout/" /> 
+      <!-- Volta para a url de retorno que o aplicativo atual usa a consulta com parametro para validar o sucesso -->
+    </form>
+    <img src="thumbnail.png">
     <shadow></shadow>
     <script type="text/json" id="ceci-definition">
       {
-        "tags": ["component-image", "view", "image"],
+        "name": "pagseguro",
+        "description": "Adicione seus próprios botões de doação pagseguro, e começar a angariar fundos.",
+        "tags": ["pagseguro", "donate"],
         "thumbnail": "./thumbnail.png",
-        "name": "Image - test",
-        "description": "Shows a simple image.",
         "broadcasts": {
-          "click": {
-            "label": "Click",
-            "description": "Occurs when the image is clicked.",
-            "default": false
+          "donate": {
+            "label": "Doe",
+            "description": "Ocorre quando o processo de doação começa."
           }
         },
         "listeners": {
-          "setImageSource": {
-            "description": "changes the image tags src attribute.",
-            "label": "Set Image Source",
-            "default": true
+          "submit": {
+            "description": "Submete uma doação uma vez que as definições foram escolhidas.",
+            "label": "Submit",
+            "default": "orange"
           }
         },
         "attributes": {
-          "height": {
-            "label": "Image Height",
-            "description": "Image Height",
+          "amount": {
+            "label": "Valor",
+            "description": "Valor em dinheiro para doar.",
             "editable": "number",
-            "listener": true
+            "listener": true,
+            "max": 3,
+            "min": 50
           },
-          "source": {
-            "label": "Image Source",
-            "description": "The Image to Show",
+          "account": {
+            "label": "Conta",
+            "description": "A conta que irá receber o pagamento do PagSeguro ",
             "editable": "text"
           },
-          "alt": {
-            "label": "ALT text 2",
-            "description": "Alternative text",
-            "editable": "text"
-          },
-          "description": {
-            "label": "Description",
-            "description": "Image description",
+          "currency": {
+            "label": "Moeda",
+            "description": "Código da moeda para montante da doação.",
             "editable": "text"
           }
         }
@@ -52,42 +61,14 @@
     </script>
   </template>
   <script>
-    Polymer('ceci-image-test', {
+    Polymer('ceci-pagseguro', {
       ready: function () {
         this.super();
-
-        var that = this;
-
-        // User-configurable Properties
-        // A component's user-configurable properties are stored as attributes.
-        // Here they are set to a remembered value, or to a default starting.
-        // The attribute name must match the name of the editable property in the 'editables' section.
-        this.setAttribute("imageUrl", this.getAttribute("imageUrl") || "");
-        this.img = this.$.image;
-        this.img.style.height = this.getAttribute( "height" ) + "px";
-
-        this.onclick = function () {
-          that.broadcast("click", this.img.getAttribute( "src" ));
-        };
-        this.super();
+        this.$.donationAmount.innerHTML = this.gettext(this.localName + "/donationAmount") || this.$.donationAmount.innerHTML;
       },
-      sourceChanged : function(oldValue,newValue){
-        console.log(oldValue,newValue);
-        this.setImageSource(this.source);
-      },
-      setImageSource : function (val) {
-        this.img.setAttribute('src', val);
-      },
-      heightChanged: function( oldValue, newValue ) {
-        this.img.style.height = ( newValue || newValue === 0 ? newValue : "160" ) + "px";
-      },
-      altChanged : function(oldValue,newValue){
-        console.log(oldValue,newValue);
-        this.img.setAttribute('alt', newValue);
-      },
-      descriptionChanged : function(oldValue,newValue){
-        console.log(oldValue,newValue);
-        this.$.description.textContent = newValue;
+      submit: function (value) {
+        this.$.form.submit();
+        this.broadcast('donate');
       }
     });
   </script>
